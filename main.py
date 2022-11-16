@@ -118,5 +118,6 @@ def main(argv):
             outputfile = arg    
     url_table=get_url(inputfile)
     generate_json(url_table,outputfile)
+
 if __name__ == "__main__":
     main(sys.argv[1:])

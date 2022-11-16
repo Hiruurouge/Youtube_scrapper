@@ -1,17 +1,21 @@
-import json
+import pytest
+import main
 
-# Creating a dictionary
-Dictionary ={1:'Welcome', 2:'to',
-			3:'Geeks', 4:'for',
-			5:'Geeks'}
 
-# Converts input dictionary into
-# string and stores it in json_string
-json_string = json.dumps(Dictionary)
-print('Equivalent json string of input dictionary:',
-	json_string)
-print("	 ")
-
-# Checking type of object
-# returned by json.dumps
-print(type(json_string))
+pytest.my_symbol = main.scrap('https://youtu.be/fmsoym8I-3o')
+def test_get_url():
+    assert main.get_url('input.json')==['https://youtu.be/fmsoym8I-3o', 'https://youtu.be/JhWZWXvN_yo']
+def test_scrap_title():
+    assert pytest.my_symbol['title']=="Pierre Niney : L’interview face cachée par HugoDécrypte"
+def test_scrap_description():
+	assert pytest.my_symbol['description'][0:15]==" L'acteur Pierr"
+def test_scrap_view():
+	assert int(pytest.my_symbol['views']) >=735588
+def test_scrap_id():
+	assert pytest.my_symbol['id']=='fmsoym8I-3o'
+def test_scrap_author():
+	assert pytest.my_symbol['author']=='HugoDécrypte'
+def test_scrap_likes():
+    assert pytest.my_symbol['likes']=='30\xa0k'
+def test_scrap_comm():
+    assert pytest.my_symbol['comm'][0][0:15]=='Pensez à vous a'
