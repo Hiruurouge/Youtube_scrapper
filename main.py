@@ -15,13 +15,14 @@ import unicodedata
 import sys
 import getopt
 import time
-from selenium.webdriver import Chrome
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
 
+N=5
 def get_url(inputfile):
     f = open(inputfile);
     data = json.load(f)
@@ -32,6 +33,13 @@ def get_url(inputfile):
 
 
 def scrap(url):
+    s=Service(ChromeDriverManager().install())
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    driver = webdriver.Chrome(service=s, chrome_options=options)
+    driver.get(url)
+    time.sleep(2)
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
     body = soup.find_all("body")[0]
@@ -57,19 +65,17 @@ def scrap(url):
         'results']['results']['contents'][0]['videoPrimaryInfoRenderer']
     likes = videoPrimaryInfoRenderer['videoActions']['menuRenderer']['topLevelButtons'][0][
         'segmentedLikeDislikeButtonRenderer']['likeButton']['toggleButtonRenderer']['defaultText']['simpleText']
-
-    comm=[]
-
-    with Chrome(executable_path=r'~/chromedriver_linux64/chromedriver') as driver:
-        wait = WebDriverWait(driver,15)
-        driver.get(url)
-
-        for item in range(2): 
-            wait.until(EC.visibility_of_element_located((By.TAG_NAME, "body"))).send_keys(Keys.END)
-            time.sleep(3)
-
-        for comment in wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "#content"))):
-            comm.append(comment.text)
+    comm = []
+    element = driver.find_element(By.XPATH,"//*[@id=\"comments\"]")
+    driver.execute_script("arguments[0].scrollIntoView();", element)
+    dsoup = BeautifulSoup(driver.page_source, 'html.parser')
+    commentsList = dsoup.find_all("ytd-comment-thread-renderer", {"class": "style-scope ytd-item-section-renderer"}, limit = N)
+    while commentsList == []:
+        time.sleep(1)
+        dsoup = BeautifulSoup(driver.page_source, 'html.parser')
+        commentsList = dsoup.find_all("ytd-comment-thread-renderer", {"class": "style-scope ytd-item-section-renderer"}, limit = N)
+    for comment in commentsList:
+        comm.append(comment.find("yt-formatted-string", {"id": "content-text"}).text)
     final = data = {"title": title,
                    "views": views,
                    "likes": likes,
