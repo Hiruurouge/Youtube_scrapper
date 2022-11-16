@@ -14,7 +14,13 @@ import re
 import unicodedata
 import sys
 import getopt
-
+import time
+from selenium.webdriver import Chrome
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
 def get_url(inputfile):
     f = open(inputfile);
@@ -26,7 +32,6 @@ def get_url(inputfile):
 
 
 def scrap(url):
-    # url='https://www.youtube.com/watch?v=xbReKE-jhd4'
     response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
     body = soup.find_all("body")[0]
@@ -53,12 +58,25 @@ def scrap(url):
     likes = videoPrimaryInfoRenderer['videoActions']['menuRenderer']['topLevelButtons'][0][
         'segmentedLikeDislikeButtonRenderer']['likeButton']['toggleButtonRenderer']['defaultText']['simpleText']
 
+    comm=[]
+
+    with Chrome(executable_path=r'~/chromedriver_linux64/chromedriver') as driver:
+        wait = WebDriverWait(driver,15)
+        driver.get(url)
+
+        for item in range(2): 
+            wait.until(EC.visibility_of_element_located((By.TAG_NAME, "body"))).send_keys(Keys.END)
+            time.sleep(3)
+
+        for comment in wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, "#content"))):
+            comm.append(comment.text)
     final = data = {"title": title,
                    "views": views,
                    "likes": likes,
                    "description": description,
                    "author": author,
-                   "id": id, }
+                   "id": id,
+                    "comm":comm}
     return final
 
 
